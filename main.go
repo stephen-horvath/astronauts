@@ -1,10 +1,28 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 )
+
+type Astronaut struct {
+	Name  string
+	Craft string
+}
+
+func extractAstronauts(astroJson []byte) []Astronaut {
+	type Astronauts struct {
+		People []Astronaut
+	}
+	var astronauts Astronauts
+	err := json.Unmarshal(astroJson, &astronauts)
+	if err != nil {
+		panic(err)
+	}
+	return astronauts.People
+}
 
 // make an http GET request to the url returning the full response body as a slice
 func fetch(url string) []byte {
@@ -29,6 +47,7 @@ func fetch(url string) []byte {
 
 func main() {
 	const url string = "http://api.open-notify.org/astros.json"
-	json := fetch(url)
-	fmt.Println(string(json))
+	astroJson := fetch(url)
+	astronauts := extractAstronauts(astroJson)
+	fmt.Println(astronauts)
 }
