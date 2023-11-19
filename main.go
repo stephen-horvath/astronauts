@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -84,11 +85,13 @@ func fetch(url string) []byte {
 
 func main() {
 	const url string = "http://api.open-notify.org/astros.json"
-	const cbn bool = false
 	const delimiter string = ","
+	cbnPtr := flag.Bool("cbn", false, "Sort the Astronauts by Craft by Name")
+	flag.Parse()
+	cbn := *cbnPtr
+
 	astroJson := fetch(url)
 	astronauts := extractAstronauts(astroJson)
 	sortAstronauts(astronauts, cbn)
 	writeCsv(astronauts, delimiter)
-	fmt.Println(astronauts)
 }
