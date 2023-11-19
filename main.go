@@ -5,12 +5,34 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sort"
 )
 
 type Astronaut struct {
 	Name  string
 	Craft string
+}
+
+// write astronauts to a csv file using the specified delimiter
+func writeCsv(ast []Astronaut, delimiter string) {
+	fo, err := os.Create("astronauts.csv")
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if err := fo.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	if _, err := fo.WriteString("Name" + delimiter + "Craft\n"); err != nil {
+		panic(err)
+	}
+	for _, astronaut := range ast {
+		if _, err := fo.WriteString(astronaut.Name + delimiter + astronaut.Craft + "\n"); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // sort the astronaughts. if cbn (craft by name) is true will be sorted by craft then name
@@ -50,7 +72,7 @@ func fetch(url string) []byte {
 			panic(err)
 		}
 	}()
-	if resp.StatusCode != 201 {
+	if resp.StatusCode != 200 {
 		panic(fmt.Sprintf("Houston we have a problem %s returned with status %d", url, resp.StatusCode))
 	}
 	body, err := io.ReadAll(resp.Body)
@@ -63,8 +85,10 @@ func fetch(url string) []byte {
 func main() {
 	const url string = "http://api.open-notify.org/astros.json"
 	const cbn bool = false
+	const delimiter string = ","
 	astroJson := fetch(url)
 	astronauts := extractAstronauts(astroJson)
 	sortAstronauts(astronauts, cbn)
+	writeCsv(astronauts, delimiter)
 	fmt.Println(astronauts)
 }
